@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>+++ DOENER-VERBRECHEN 2026 +++</title>
+    <link rel="stylesheet" href="style.css"> </head>
+<body bgcolor="#F5F5DC" text="#800000">
+<center>
+    <marquee bgcolor="#FFFF00">+++ REINHEITSGEBOT AUSSER KRAFT GESETZT +++</marquee>
+
+    <table width="800" border="3" cellpadding="10" bgcolor="#FFFFFF">
+        <tr>
+            <td>
+                <h1>Döner-Verbrechen Dashboard</h1>
+                
+                <div style="background:#D2B48C; border:3px double #800000; padding:15px; text-align:center; margin-bottom:20px;">
+                    <b style="font-size: 1.2em;">ZUFALLS-SÜNDE GENERATOR</b><br>
+                    <p style="font-size: 0.8em;">Erfinde ein neues Verbrechen basierend auf deinen Vorräten!</p>
+                    <button onclick="generateCrime()" style="font-family:'Comic Sans MS'; padding:10px; cursor:pointer; background:#FF4500; color:white; border:none; font-weight:bold;">
+                        JETZT VERBRECHEN WÜRFELN!
+                    </button>
+                    <div id="crime-result" style="margin-top:10px;">
+                        </div>
+                </div>
+
+                <div id="score-board">
+                    <b>REINHEITSGEBOT-O-METER:</b>
+                    <div id="stats">Lädt...</div>
+                    <p>Gruppen-Schande-Gesamt: <b id="group-total">0</b> Punkte</p>
+                </div>
+                <center>
+                    <fieldset style="width: 780px; background:#FFFACD; border: 2px dashed red; padding: 10px; margin-bottom: 20px; text-align: left;">
+                        <legend><b><font face="Comic Sans MS">DIE SKALA DER SCHANDE (LEGENDE)</font></b></legend>
+                        <font face="Arial" size="2">
+                            <font color="green">1-3: <b>Döner-Duldung</b></font> (Akzeptabel bei >2 Promille)<br>
+                            <font color="orange">4-6: <b>Kebab-Ketzerei</b></font> (Hinter vorgehaltener Hand genießbar)<br>
+                            <font color="#FF4500">7-9: <b>Fleisch-Frevler</b></font> (Hausverbot in Istanbul)<br>
+                            <font color="red">10: <b>Kulinarisches Kriegsverbrechen</b></font> (Anzeige ist raus)
+                        </font>
+                    </fieldset>
+                </center>
+                <hr>
+
+                <table id="crime-table" border="1" width="100%" cellpadding="3" cellspacing="0">
+                    <tr bgcolor="#D2B48C">
+                        <th>VERBRECHEN</th>
+                        <th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th>
+                        <th>INFO</th>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</center>
+
+
+<script src="logik.js"></script>
+</body>
+</html>
