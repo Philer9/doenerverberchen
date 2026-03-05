@@ -91,7 +91,7 @@ async function uploadEvidenceToAzure(input, vIdx) {
     
     const file = input.files[0];
     const fileName = `evidence_${pIdx}_${vIdx}.jpg`; // Eindeutiger Name pro Verbrechen & Person
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}${sasToken}`;
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}?${sasToken}`;
 
     // Optisches Feedback
     input.disabled = true;

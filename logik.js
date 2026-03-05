@@ -31,7 +31,7 @@ async function saveToAzure() {
         }
     }
 
-    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?" + sasToken;
     
     try {
         const response = await fetch(azureUrl, {
@@ -48,7 +48,7 @@ async function saveToAzure() {
     }
 }
 async function syncFromAzure() {
-    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?" + sasToken;
     try {
         const response = await fetch(azureUrl);
         if (!response.ok) throw new Error("Cloud-Datei nicht gefunden");
@@ -173,29 +173,4 @@ function renderPhotoSlideshow() {
         }
     });
 }
-async function uploadEvidence(file) {
-    // Einzigartiger Dateiname, damit nichts überschrieben wird
-    const fileName = `evidence_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}${sasToken}`;
 
-    try {
-        const response = await fetch(azureUrl, {
-            method: 'PUT',
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.type
-            },
-            body: file
-        });
-
-        if (response.ok) {
-            console.log("Beweisfoto erfolgreich gesichert!");
-            // Optional: Speichere die URL lokal, damit das Bild in der Slideshow erscheint
-            const imageUrl = azureUrl.split('?')[0]; // URL ohne SAS-Token
-            localStorage.setItem(fileName, imageUrl); 
-            renderPhotoSlideshow(); // Slideshow aktualisieren
-        }
-    } catch (err) {
-        console.error("Fehler beim Bildupload:", err);
-    }
-}
