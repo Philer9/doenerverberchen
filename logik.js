@@ -1,20 +1,87 @@
 const personen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
 let verbrechen_liste = [];
+// Der Platzhalter wird beim Deployment durch das GitHub Secret ersetzt
+const sasToken = "___SAS_TOKEN_PLACEHOLDER___";
+window.onload = async function() {
+    console.log("Starte System...");
+    try {
+        // 1. Verbrechen-Katalog laden
+        const resp = await fetch('verbrechen.json');
+        verbrechen_liste = await resp.json();
+        
+        // 2. Cloud-Synchronisation (Überschreibt lokales localStorage mit Cloud-Werten)
+        await syncFromAzure();
+        
+        // 3. UI aufbauen
+        renderTable();
+        calculateAllScores();
+        renderPhotoSlideshow();
+        
+        console.log("System bereit. Verbrechen geladen:", verbrechen_liste.length);
+    } catch (err) {
+        console.error("Initialisierungsfehler:", err);
+    }
+    // Alle 60 Sekunden die neuesten Schandtaten der anderen laden
+    setInterval(syncFromAzure, 60000);
+};
+async function saveToAzure() {
+    console.log("Speichere in Azure...");
+    let data = { 
+        last_updated: new Date().toISOString(), 
+        scores: {} 
+    };
+    
+    // Wir loopen durch alle Personen
+    for (let pIdx = 0; pIdx < personen.length; pIdx++) {
+        data.scores[`p_${pIdx}`] = {};
+        // Wir loopen dynamisch durch alle geladenen Verbrechen
+        for (let vIdx = 0; vIdx < verbrechen_liste.length; vIdx++) {
+            const id = `cb_${vIdx}_${pIdx}`;
+            data.scores[`p_${pIdx}`][`v_${vIdx}`] = localStorage.getItem(id) === "true";
+        }
+    }
 
-window.onload = function() {
-    console.log("Seite geladen, starte Fetch...");
-    fetch('verbrechen.json')
-        .then(response => response.json())
-        .then(data => {
-            verbrechen_liste = data;
-            console.log("JSON erfolgreich geladen:", verbrechen_liste.length, "Einträge");
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    
+    try {
+        const response = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: { 
+                'x-ms-blob-type': 'BlockBlob', 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(data)
+        });
+        if(response.ok) console.log("Cloud-Backup erfolgreich!");
+    } catch (err) {
+        console.error("Cloud-Speicherfehler:", err);
+    }
+}
+async function syncFromAzure() {
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    try {
+        const response = await fetch(azureUrl);
+        if (!response.ok) throw new Error("Cloud-Datei nicht gefunden");
+        const data = await response.json();
+        
+        // Die Cloud-Daten in den lokalen Speicher spiegeln
+        Object.keys(data.scores).forEach(pKey => {
+            const pIdx = pKey.split('_')[1];
+            Object.keys(data.scores[pKey]).forEach(vKey => {
+                const vIdx = vKey.split('_')[1];
+                localStorage.setItem(`cb_${vIdx}_${pIdx}`, data.scores[pKey][vKey]);
+            });
+        });
+        
+        // Nur wenn wir nicht im Initial-Load sind, UI manuell triggern
+        if (typeof renderTable === "function") {
             renderTable();
             calculateAllScores();
-            renderPhotoSlideshow();
-        })
-        .catch(err => console.error("JSON Fehler:", err));
-};
-
+        }
+    } catch (e) {
+        console.error("Synchronisation fehlgeschlagen (evtl. Datei noch leer?):", e);
+    }
+}
 function renderTable() {
     const table = document.getElementById('crime-table');
     if (!table) return;
@@ -36,6 +103,7 @@ function updateScore(id) {
     const cb = document.getElementById(id);
     localStorage.setItem(id, cb.checked);
     calculateAllScores();
+    saveToAzure();
 }
 
 function calculateAllScores() {
@@ -116,9 +184,3 @@ function renderPhotoSlideshow() {
     });
 }
 
-// In deinem window.onload am Ende ergänzen:
-// fetch('verbrechen.json').then(...).then(() => {
-//    renderTable();
-//    calculateAllScores();
-//    renderPhotoSlideshow(); // <-- HIER EINFÜGEN
-// });
