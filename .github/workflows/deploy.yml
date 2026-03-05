@@ -1,0 +1,24 @@
+name: Deploy Website to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Upload to Azure Storage
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          # Wir nutzen direkt die Connection-String Variable für die volle Power
+          az storage blob upload-batch \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --destination '$web' \
+            --source . \
+            --overwrite true
