@@ -14,11 +14,21 @@ jobs:
 
     # 1. SAS Token in die logik.js schmuggeln
     - name: Inject SAS Token
+      env:
+        SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
       run: |
-
-        TOKEN="${{ secrets.AZURE_SAS_TOKEN }}"
-        sed -i "s#___SAS_TOKEN_PLACEHOLDER___#$TOKEN#g" logik.js
-        sed -i "s#___SAS_TOKEN_PLACEHOLDER___#$TOKEN#g" profil.html
+        # Wir nutzen Python, da es keine Probleme mit Sonderzeichen wie '&' hat
+        python3 -c "
+        import os
+        token = os.environ['SAS_TOKEN']
+        for filename in ['logik.js', 'profil.html']:
+            if os.path.exists(filename):
+                with open(filename, 'r') as f:
+                    content = f.read()
+                with open(filename, 'w') as f:
+                    # Ersetzt den Platzhalter sicher durch den echten Token
+                    f.write(content.replace('___SAS_TOKEN_PLACEHOLDER___', token))
+        "
 
    # 2. ALLES AUSSER dem Ordner 'beweise' in $web hochladen
     - name: Upload Website to $web
