@@ -1,59 +1,37 @@
 const personen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
-let verbrechen_liste = []; // Wird durch fetch gefüllt
+let verbrechen_liste = [];
 
 window.onload = function() {
-    // Lade die JSON-Daten
+    console.log("Seite geladen, starte Fetch...");
     fetch('verbrechen.json')
         .then(response => response.json())
         .then(data => {
             verbrechen_liste = data;
+            console.log("JSON erfolgreich geladen:", verbrechen_liste.length, "Einträge");
             renderTable();
             calculateAllScores();
+            renderPhotoSlideshow();
         })
-        .catch(err => {
-            console.error("Fehler beim Laden der JSON:", err);
-            document.getElementById('stats').innerHTML = "<b style='color:red;'>JSON-Ladefehler! Live-Server aktiv?</b>";
-        });
+        .catch(err => console.error("JSON Fehler:", err));
 };
 
 function renderTable() {
     const table = document.getElementById('crime-table');
     if (!table) return;
-
-    // Tabellenkopf anpassen für die Punkte-Spalte
-    table.innerHTML = `
-        <tr bgcolor="#D2B48C">
-            <th>VERBRECHEN</th>
-            <th>PKT</th>
-            <th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th>
-            <th>INFO</th>
-        </tr>
-    `;
+    table.innerHTML = `<tr bgcolor="#D2B48C"><th>GERICHT</th><th>PKT</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>INFO</th></tr>`;
 
     verbrechen_liste.forEach((item, index) => {
         const row = table.insertRow(-1);
-        let checkBoxes = "";
-        
-        // Die 5 Personen-Checkboxes
-        personen.forEach((p, pIdx) => {
+        let cbs = "";
+        for(let pIdx=0; pIdx<5; pIdx++) {
             const id = `cb_${index}_${pIdx}`;
             const checked = localStorage.getItem(id) === "true" ? "checked" : "";
-            checkBoxes += `<td align="center" bgcolor="${pIdx % 2 === 0 ? '#FFFFFF' : '#F0F0F0'}">
-                            <input type="checkbox" id="${id}" ${checked} onclick="updateScore('${id}')">
-                          </td>`;
-        });
-
-        // Die Zeile mit Name, Punkten, Checkboxen und Info-Link
-        row.innerHTML = `
-            <td><font face="Arial" size="2"><b>${item[0]}</b></font></td>
-            <td align="center"><b><font color="red">${item[1]}</font></b></td>
-            ${checkBoxes}
-            <td align="center"><a href="rezept.html?name=${encodeURIComponent(item[0])}&text=${encodeURIComponent(item[2])}&lvl=${item[1]}">
-                <img src="https://web.archive.org/web/20090830051253/http://geocities.com/SiliconValley/6549/info.gif" border="0" width="20">
-            </a></td>
-        `;
+            cbs += `<td align="center"><input type="checkbox" id="${id}" ${checked} onclick="updateScore('${id}')"></td>`;
+        }
+        row.innerHTML = `<td><b>${item[0]}</b></td><td align="center"><b>${item[1]}</b></td>${cbs}<td align="center"><a href="rezept.html?name=${encodeURIComponent(item[0])}&text=${encodeURIComponent(item[2])}&lvl=${item[1]}">📖</a></td>`;
     });
 }
+
 function updateScore(id) {
     const cb = document.getElementById(id);
     localStorage.setItem(id, cb.checked);
@@ -61,6 +39,7 @@ function updateScore(id) {
 }
 
 function calculateAllScores() {
+    console.log("Berechne Scores...");
     let html = "<table width='100%' border='1' cellpadding='5' style='background:white;'><tr>";
     let gruppenSchande = 0;
 
@@ -73,25 +52,18 @@ function calculateAllScores() {
         });
         
         gruppenSchande += penalty;
-        
-        // Der Score startet bei 100 und kann jetzt UNENDLICH weit ins Negative gehen
         let score = 100 - penalty; 
+        let color = score < 0 ? "red" : "green";
         
-        // Neue, aggressivere Status-Stufen für den 2000er Vibe
-        let status = "";
-        let color = "green";
-
-        if (score > 80) { status = "👼 Unschulds-Lamm"; color = "green"; }
-        else if (score > 50) { status = "🥴 Mitläufer"; color = "orange"; }
-        else if (score > 0) { status = "👺 Sünden-Sammler"; color = "#FF4500"; }
-        else if (score > -50) { status = "💀 Kulinarischer Untoter"; color = "red"; }
-        else { status = "☣️ BIOLOGISCHE WAFFE"; color = "purple"; } // Für die ganz Harten
-        
-        html += `<td align="center" width="20%" bgcolor="${score < 0 ? '#FFCCCC' : '#FFFFFF'}">
-                    <b><font face="Arial">${p}</font></b><br>
-                    <font size="6" color="${color}"><b>${score}</b></font><br>
-                    <font size="1"><i>${status}</i></font>
-                 </td>`;
+        // DER ENTSCHEIDENDE TEIL:
+        html += `
+            <td align="center" width="20%" bgcolor="${score < 0 ? '#FFCCCC' : '#FFFFFF'}" 
+                style="cursor:pointer; border: 2px solid black;" 
+                onclick="window.location.href='profil.html?id=${pIdx}'">
+                <font face="Arial"><b>${p}</b></font><br>
+                <font size="1" color="blue"><u>(Akte öffnen)</u></font><br>
+                <font size="6" color="${color}"><b>${score}</b></font>
+            </td>`;
     });
     
     html += "</tr></table>";
@@ -100,37 +72,53 @@ function calculateAllScores() {
 }
 
 function generateCrime() {
-    // Basis-Zutaten aus deinem Küchen-Bestand
-    const zutatenPool = [
-        "Mehl", "Öl", "Wasser", "Bier", 
-        "Zwiebel", "Käse"
-    ];
-
-    const styles = [
-        { name: "Eis am Stiel", prep: "In Förmchen füllen, mit Stiel versehen und 4 Stunden im Gefrierfach des Wohnmobils vergessen." },
-        { name: "Schicht-Auflauf", prep: "In eine Aluschale schichten, mit Käse überhäufen und auf dem Grill backen, bis die Kruste schwarz wird." },
-        { name: "Praline", prep: "In kleine Kugeln rollen, in Dönerfett wenden und kalt servieren. Ein Häppchen des Grauens." },
-        { name: "Energy-Drink", prep: "Im Mixer pürieren, mit warmem Red Bull aufgießen und auf Ex trinken." },
-        { name: "Hefezopf", prep: "In Fertig-Teig einwickeln, flechten und so lange grillen, bis der Teig außen verkohlt und innen roh ist." }
-    ];
-
-    // Zufällige Auswahl
-    const zutat = zutatenPool[Math.floor(Math.random() * zutatenPool.length)];
-    const style = styles[Math.floor(Math.random() * styles.length)];
-    
-    const name = "Döner-" + zutat + "-" + style.name;
-    const recipeZutaten = "Dönerfleisch, " + zutat + ", " + (Math.random() > 0.5 ? "etwas Käse" : "frische Chillis");
-    const anleitung = style.prep;
-
-    // Anzeige im Dashboard
-    const resultDiv = document.getElementById('crime-result');
-    resultDiv.innerHTML = `
-        <div style="background:#fff; border:2px solid red; padding:10px; margin-top:10px; text-align:left;">
-            <b style="color:red; font-size:1.2em;">${name}</b><br>
-            <small><b>Zutaten:</b> ${recipeZutaten}</small><br>
-            <small><b>Zubereitung:</b> ${anleitung}</small><br>
-            <button onclick="window.location.href='rezept.html?name=${encodeURIComponent(name)}&text=${encodeURIComponent(recipeZutaten + ' | ' + anleitung)}&lvl=10'" 
-                    style="margin-top:5px; font-size:10px;">REZEPT-ANSICHT ÖFFNEN</button>
-        </div>
-    `;
+    const res = "Döner-" + Math.random().toString(36).substring(7); // Simpler Generator Fix
+    document.getElementById('crime-result').innerText = res;
 }
+function renderPhotoSlideshow() {
+    const left = document.getElementById('slider-left');
+    const right = document.getElementById('slider-right');
+    if(!left || !right) return;
+
+    let allPhotos = [];
+
+    // Alle Schlüssel im LocalStorage durchsuchen
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('pfp_') || key.startsWith('evidence_')) {
+            allPhotos.push(localStorage.getItem(key));
+        }
+    }
+
+    // Wenn keine Bilder da sind, Platzhalter anzeigen
+    if (allPhotos.length === 0) {
+        const placeholder = "<div style='font-size:10px; border:1px dashed gray; padding:10px;'>Noch keine Beweise gesichert...</div>";
+        left.innerHTML = placeholder;
+        right.innerHTML = placeholder;
+        return;
+    }
+
+    // Bilder auf beide Seiten verteilen
+    left.innerHTML = "";
+    right.innerHTML = "";
+
+    allPhotos.forEach((src, index) => {
+        const imgHTML = `
+            <div style="border: 2px solid #800000; background: white; padding: 2px; transform: rotate(${Math.random() * 6 - 3}deg);">
+                <img src="${src}" style="width: 100%; display: block; filter: sepia(0.3);">
+            </div>
+        `;
+        if (index % 2 === 0) {
+            left.innerHTML += imgHTML;
+        } else {
+            right.innerHTML += imgHTML;
+        }
+    });
+}
+
+// In deinem window.onload am Ende ergänzen:
+// fetch('verbrechen.json').then(...).then(() => {
+//    renderTable();
+//    calculateAllScores();
+//    renderPhotoSlideshow(); // <-- HIER EINFÜGEN
+// });
