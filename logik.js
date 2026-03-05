@@ -1,27 +1,20 @@
 const personen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
 let verbrechen_liste = [];
-// Der Platzhalter wird beim Deployment durch das GitHub Secret ersetzt
+
 const sasToken = "___SAS_TOKEN_PLACEHOLDER___";
 window.onload = async function() {
     console.log("Starte System...");
     try {
-        // 1. Verbrechen-Katalog laden
         const resp = await fetch('verbrechen.json');
         verbrechen_liste = await resp.json();
-        
-        // 2. Cloud-Synchronisation (Überschreibt lokales localStorage mit Cloud-Werten)
         await syncFromAzure();
-        
-        // 3. UI aufbauen
         renderTable();
         calculateAllScores();
         renderPhotoSlideshow();
-        
         console.log("System bereit. Verbrechen geladen:", verbrechen_liste.length);
     } catch (err) {
         console.error("Initialisierungsfehler:", err);
     }
-    // Alle 60 Sekunden die neuesten Schandtaten der anderen laden
     setInterval(syncFromAzure, 60000);
 };
 async function saveToAzure() {
@@ -30,11 +23,8 @@ async function saveToAzure() {
         last_updated: new Date().toISOString(), 
         scores: {} 
     };
-    
-    // Wir loopen durch alle Personen
     for (let pIdx = 0; pIdx < personen.length; pIdx++) {
         data.scores[`p_${pIdx}`] = {};
-        // Wir loopen dynamisch durch alle geladenen Verbrechen
         for (let vIdx = 0; vIdx < verbrechen_liste.length; vIdx++) {
             const id = `cb_${vIdx}_${pIdx}`;
             data.scores[`p_${pIdx}`][`v_${vIdx}`] = localStorage.getItem(id) === "true";
@@ -183,4 +173,29 @@ function renderPhotoSlideshow() {
         }
     });
 }
+async function uploadEvidence(file) {
+    // Einzigartiger Dateiname, damit nichts überschrieben wird
+    const fileName = `evidence_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}${sasToken}`;
 
+    try {
+        const response = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': file.type
+            },
+            body: file
+        });
+
+        if (response.ok) {
+            console.log("Beweisfoto erfolgreich gesichert!");
+            // Optional: Speichere die URL lokal, damit das Bild in der Slideshow erscheint
+            const imageUrl = azureUrl.split('?')[0]; // URL ohne SAS-Token
+            localStorage.setItem(fileName, imageUrl); 
+            renderPhotoSlideshow(); // Slideshow aktualisieren
+        }
+    } catch (err) {
+        console.error("Fehler beim Bildupload:", err);
+    }
+}

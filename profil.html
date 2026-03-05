@@ -46,36 +46,37 @@ const params = new URLSearchParams(window.location.search);
 const pIdx = params.get('id');
 const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
 
+// Den Namen der Person oben anzeigen
 document.getElementById('user-name').innerText = "Akte: " + personenNamen[pIdx];
 
 window.onload = function() {
-    // Bio laden
+    // Bio laden (Bleibt vorerst im localStorage, da wenig Text)
     const savedBio = localStorage.getItem('bio_' + pIdx);
     if(savedBio) document.getElementById('bio-input').value = savedBio;
     
-    // Haupt-Profilbild laden
+    // Haupt-Profilbild laden (URL aus Cloud)
     const savedImg = localStorage.getItem('pfp_' + pIdx);
     if(savedImg) document.getElementById('profile-img').src = savedImg;
 
-    // Verbrechen laden und Bilder-Uploads generieren
+    // Verbrechen laden
     fetch('verbrechen.json')
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById('user-crimes');
             data.forEach((item, vIdx) => {
+                // Prüfen, ob Checkbox im localStorage auf true steht
                 if(localStorage.getItem(`cb_${vIdx}_${pIdx}`) === "true") {
                     const li = document.createElement('li');
                     li.style.marginBottom = "15px";
                     
-                    // Prüfen, ob für dieses spezifische Verbrechen schon ein Foto existiert
                     const evidenceKey = `evidence_${pIdx}_${vIdx}`;
-                    const savedEvidence = localStorage.getItem(evidenceKey);
+                    const savedEvidence = localStorage.getItem(evidenceKey); // Hier liegt jetzt die URL
                     
                     li.innerHTML = `
                         <b>${item[0]}</b> (${item[1]} Pkt)<br>
                         <div id="img_cont_${vIdx}" style="margin-top:5px;">
-                            ${savedEvidence ? `<img src="${savedEvidence}" style="max-width:100px; border:1px solid #000;"><br>` : ''}
-                            <input type="file" accept="image/*" onchange="uploadEvidence(this, ${vIdx})" style="font-size:10px;">
+                            ${savedEvidence ? `<img src="${savedEvidence}" style="max-width:200px; border:2px solid #800000; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);"><br>` : ''}
+                            <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="font-size:10px;">
                         </div>
                     `;
                     list.appendChild(li);
@@ -84,31 +85,52 @@ window.onload = function() {
         });
 };
 
-// Funktion für Beweisfotos
-function uploadEvidence(input, vIdx) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        // Bild speichern
-        localStorage.setItem(`evidence_${pIdx}_${vIdx}`, reader.result);
-        alert("Beweisfoto gesichert!");
-        location.reload(); // Seite neu laden um Bild anzuzeigen
+// DIE NEUE TECHNIK: Upload direkt zu Azure
+async function uploadEvidenceToAzure(input, vIdx) {
+    if (!input.files || !input.files[0]) return;
+    
+    const file = input.files[0];
+    const fileName = `evidence_${pIdx}_${vIdx}.jpg`; // Eindeutiger Name pro Verbrechen & Person
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}${sasToken}`;
+
+    // Optisches Feedback
+    input.disabled = true;
+    console.log("Sende Beweis zu Azure...");
+
+    try {
+        const response = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': file.type
+            },
+            body: file
+        });
+
+        if (response.ok) {
+            // Wir speichern nur die URL (ohne SAS-Token) im localStorage
+            const finalImageUrl = azureUrl.split('?')[0];
+            localStorage.setItem(`evidence_${pIdx}_${vIdx}`, finalImageUrl);
+            
+            alert("Beweisfoto in der Cloud gesichert!");
+            location.reload(); 
+        } else {
+            alert("Azure Fehler: " + response.statusText);
+        }
+    } catch (err) {
+        console.error("Upload fehlgeschlagen:", err);
+        alert("Upload fehlgeschlagen. Hast du Internet?");
+    } finally {
+        input.disabled = false;
     }
-    reader.readAsDataURL(input.files[0]);
 }
 
-// Haupt-Profilbild Upload
-document.getElementById('img-input').addEventListener('change', function() {
-    const reader = new FileReader();
-    reader.onload = function() {
-        document.getElementById('profile-img').src = reader.result;
-    }
-    reader.readAsDataURL(this.files[0]);
-});
-
+// Bio & Profilbild-Pfad speichern
 function saveProfile() {
-    localStorage.setItem('bio_' + pIdx, document.getElementById('bio-input').value);
-    localStorage.setItem('pfp_' + pIdx, document.getElementById('profile-img').src);
-    alert("Profil-Stammdaten gespeichert!");
+    const bio = document.getElementById('bio-input').value;
+    localStorage.setItem('bio_' + pIdx, bio);
+    alert("Profil-Akte aktualisiert!");
+    saveToAzure(); // Triggert das Backup der scores.json, falls vorhanden
 }
 </script>
 
