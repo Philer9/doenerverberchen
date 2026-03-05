@@ -15,7 +15,10 @@ jobs:
     # 1. SAS Token in die logik.js schmuggeln
     - name: Inject SAS Token
       run: |
-        sed -i "s|___SAS_TOKEN_PLACEHOLDER___|${{ secrets.AZURE_SAS_TOKEN }}|g" logik.js
+        # Wir nutzen 'sed', um den Platzhalter in ALLEN JS-Dateien zu ersetzen
+        # Das '"${{ secrets.AZURE_SAS_TOKEN }}"' sorgt dafür, dass & Zeichen nicht interpretiert werden
+        sed -i 's|___SAS_TOKEN_PLACEHOLDER___|'"${{ secrets.AZURE_SAS_TOKEN }}"'|g' logik.js
+        sed -i 's|___SAS_TOKEN_PLACEHOLDER___|'"${{ secrets.AZURE_SAS_TOKEN }}"'|g' profil.html
 
    # 2. ALLES AUSSER dem Ordner 'beweise' in $web hochladen
     - name: Upload Website to $web
