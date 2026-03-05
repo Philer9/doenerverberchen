@@ -44,11 +44,11 @@
 <script src="logik.js"></script> <script>
     // 1. Die Hash-Werte deiner Favoriten (Passwörter)
 const passwordHashes = {
-    0: "266497274070a98f9d0c6407f3542289c381665a587440660f545465e6383a1b", // petersilie
+    0: "b7c45477ab3ddec036c0ea808f143625aec0f8cb262a880659e6239f25ff349a", // petersilie
     1: "7514b4a1337d13d6cda65fe3d5bd1d476340c766666bea6fda9a6a9cd272accd", // erdnuss
-    2: "02c3859663e26087b3e0c077b96e5d898517228a4788390b106263546a16174a", // zitronengras
-    3: "6784d852ca2e6e3c08003117462c19e59275a596167823b16027376c962b3c22", // curry
-    4: "0e2f5b3a4a75368a5202613589c368686e921d0092305cfcf8d63f0a3597816d"  // tofu
+    2: "85b0d20515d5e24656ab994daf11544b6ed7d27a3bc79bc03bc1fc5694398456", // zitronengras
+    3: "0b8e0d9bc8319e36a0da967bc51511b1a70f22af4ae2b1b3b723e49df8775a65", // curry
+    4: "cc52e9ceb39eabd803ce34abace35a582f9869d00844af61740120b0f42bdc81"  // tofu
 };
 
 // 2. Die Umwandlungs-Funktion (SHA-256)
@@ -73,50 +73,73 @@ async function checkAccess() {
     }
 }
 
-// 4. Beispiel: So müssen deine Funktionen jetzt aussehen (WICHTIG: async!)
+
 async function saveProfile() {
     if (await checkAccess()) {
         const bio = document.getElementById('bio-input').value;
         localStorage.setItem('bio_' + pIdx, bio);
         alert("Profil gespeichert!");
-        // Deine Vorräte (Pak Choi, Currypaste) sind nun sicher gesichert!
+
     }
 }
 const params = new URLSearchParams(window.location.search);
 const pIdx = params.get('id');
 const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
 
-// Den Namen der Person oben anzeigen
+
 document.getElementById('user-name').innerText = "Akte: " + personenNamen[pIdx];
 
-window.onload = function() {
-    // Bio laden (Bleibt vorerst im localStorage, da wenig Text)
-    const savedBio = localStorage.getItem('bio_' + pIdx);
+window.onload = async function() {
+    // 1. Zuerst die Cloud-Daten laden (Bios und Evidenz-Links)
+    let cloudData = { scores: {}, bios: {} };
+    try {
+        const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json${sasToken}`;
+        const res = await fetch(azureUrl);
+        if (res.ok) {
+            cloudData = await res.json();
+        }
+    } catch (e) {
+        console.warn("Cloud-Daten konnten nicht geladen werden, nutze lokale Backups.");
+    }
+
+    // --- BIO LADEN ---
+    // Wir priorisieren die Cloud, nehmen localStorage als Fallback
+    const savedBio = (cloudData.bios && cloudData.bios[pIdx]) || localStorage.getItem('bio_' + pIdx);
     if(savedBio) document.getElementById('bio-input').value = savedBio;
     
-    // Haupt-Profilbild laden (URL aus Cloud)
+    // --- PROFILBILD LADEN ---
     const savedImg = localStorage.getItem('pfp_' + pIdx);
     if(savedImg) document.getElementById('profile-img').src = savedImg;
 
-    // Verbrechen laden
+    // --- VERBRECHEN LADEN ---
     fetch('verbrechen.json')
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById('user-crimes');
+            list.innerHTML = ""; // Liste leeren, falls nötig
+
             data.forEach((item, vIdx) => {
-                // Prüfen, ob Checkbox im localStorage auf true steht
+                // Prüfen, ob das Verbrechen für diesen User aktiv ist
                 if(localStorage.getItem(`cb_${vIdx}_${pIdx}`) === "true") {
                     const li = document.createElement('li');
-                    li.style.marginBottom = "15px";
+                    li.style.marginBottom = "20px";
                     
+                    // Wir suchen den Bild-Link: 1. Im localStorage, 2. (optional) in cloudData
                     const evidenceKey = `evidence_${pIdx}_${vIdx}`;
-                    const savedEvidence = localStorage.getItem(evidenceKey); // Hier liegt jetzt die URL
+                    const savedEvidence = localStorage.getItem(evidenceKey);
                     
                     li.innerHTML = `
-                        <b>${item[0]}</b> (${item[1]} Pkt)<br>
-                        <div id="img_cont_${vIdx}" style="margin-top:5px;">
-                            ${savedEvidence ? `<img src="${savedEvidence}" style="max-width:200px; border:2px solid #800000; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);"><br>` : ''}
-                            <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="font-size:10px;">
+                        <div style="background: #fdfdfd; padding: 10px; border-left: 5px solid #800000; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
+                            <b style="color: #333;">${item[0]}</b> <span style="color: #800000; font-size: 0.9em;">(${item[1]} Pkt)</span><br>
+                            <div id="img_cont_${vIdx}" style="margin-top:8px;">
+                                ${savedEvidence ? 
+                                    `<img src="${savedEvidence}" style="max-width:100%; border-radius: 4px; border:1px solid #ddd; margin-bottom: 5px;"><br>` 
+                                    : `<p style="font-size: 11px; color: #999;">Kein Beweisfoto hinterlegt</p>`}
+                                <label style="font-size: 11px; font-weight: bold; cursor: pointer; color: #007bff;">
+                                    📸 Foto aufnehmen/hochladen
+                                    <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
+                                </label>
+                            </div>
                         </div>
                     `;
                     list.appendChild(li);
@@ -170,11 +193,43 @@ async function uploadEvidenceToAzure(input, vIdx) {
 }
 
 // Bio & Profilbild-Pfad speichern
-function saveProfile() {
-    const bio = document.getElementById('bio-input').value;
-    localStorage.setItem('bio_' + pIdx, bio);
-    alert("Profil-Akte aktualisiert!");
-    saveToAzure(); // Triggert das Backup der scores.json, falls vorhanden
+async function saveProfile() {
+    const hatZugriff = await checkAccess();
+    if (!hatZugriff) return
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
+    
+    try {
+        // Erst die aktuellen Scores laden, um nichts zu überschreiben
+        const response = await fetch(azureUrl);
+        let data = { scores: {}, bios: {} };
+        
+        if (response.ok) {
+            data = await response.json();
+        }
+
+        // Falls das bios-Objekt noch nicht existiert, erstellen
+        if (!data.bios) data.bios = {};
+        
+        // Bio für die aktuelle Person (pIdx) speichern
+        data.bios[pIdx] = neueBio;
+        data.last_updated = new Date().toISOString();
+
+        // Das aktualisierte JSON wieder hochladen
+        const uploadRes = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!uploadRes.ok) throw new Error("Upload-Fehler");
+        console.log("Bio-Backup in Azure erfolgreich!");
+
+    } catch (err) {
+        console.error("Cloud-Backup der Bio fehlgeschlagen:", err);
+    }
 }
 </script>
 </body>
