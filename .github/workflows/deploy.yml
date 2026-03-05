@@ -17,7 +17,7 @@ jobs:
       run: |
         sed -i "s|___SAS_TOKEN_PLACEHOLDER___|${{ secrets.AZURE_SAS_TOKEN }}|g" logik.js
 
-    # 2. ALLES AUSSER dem Ordner 'beweise' in $web hochladen (Die Website)
+   # 2. ALLES AUSSER dem Ordner 'beweise' in $web hochladen
     - name: Upload Website to $web
       uses: azure/CLI@v1
       with:
@@ -27,9 +27,7 @@ jobs:
             --destination '$web' \
             --source . \
             --pattern "*" \
-            --ignore-errors \
             --overwrite true
-          # Wir ignorieren den 'beweise' Ordner hier implizit, indem wir ihn gleich gezielt woanders hin schieben
 
     # 3. NUR den Inhalt des lokalen Ordners 'beweise' in den Container 'beweise' hochladen
     - name: Upload Data to beweise container
@@ -40,5 +38,4 @@ jobs:
             --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
             --destination 'beweise' \
             --source ./beweise \
-            --overwrite true
             --overwrite true
