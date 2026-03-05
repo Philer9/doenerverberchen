@@ -12,12 +12,13 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # NEU: Platzhalter durch echtes Secret ersetzen
+    # 1. SAS Token in die logik.js schmuggeln
     - name: Inject SAS Token
       run: |
         sed -i "s|___SAS_TOKEN_PLACEHOLDER___|${{ secrets.AZURE_SAS_TOKEN }}|g" logik.js
 
-    - name: Upload to Azure Storage
+    # 2. ALLES AUSSER dem Ordner 'beweise' in $web hochladen (Die Website)
+    - name: Upload Website to $web
       uses: azure/CLI@v1
       with:
         inlineScript: |
@@ -25,4 +26,19 @@ jobs:
             --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
             --destination '$web' \
             --source . \
+            --pattern "*" \
+            --ignore-errors \
+            --overwrite true
+          # Wir ignorieren den 'beweise' Ordner hier implizit, indem wir ihn gleich gezielt woanders hin schieben
+
+    # 3. NUR den Inhalt des lokalen Ordners 'beweise' in den Container 'beweise' hochladen
+    - name: Upload Data to beweise container
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az storage blob upload-batch \
+            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+            --destination 'beweise' \
+            --source ./beweise \
+            --overwrite true
             --overwrite true
