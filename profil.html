@@ -4,16 +4,26 @@
     <meta charset="UTF-8">
     <title>SÜNDER-PROFIL | 2026</title>
     <style>
-        body { background-color: #F5F5DC; font-family: 'Arial', sans-serif; text-align: center; padding: 20px; }
+        body { background-color: #F5F5DC; font-family: 'Arial', sans-serif; text-align: center; padding: 20px; color: #333; }
         .profile-card { 
             background: white; border: 3px double #800000; padding: 20px; 
             max-width: 500px; margin: auto; box-shadow: 5px 5px 0px #800000;
         }
-        .pfp-container { width: 150px; height: 150px; background: #ddd; margin: 10px auto; border: 2px solid #000; overflow: hidden; }
+        .pfp-container { 
+            width: 150px; height: 150px; background: #ddd; margin: 10px auto; 
+            border: 2px solid #000; overflow: hidden; position: relative;
+        }
         .pfp-container img { width: 100%; height: 100%; object-fit: cover; }
-        textarea { width: 100%; height: 80px; margin-top: 10px; }
-        .verbrechen-liste { text-align: left; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
-        .back-link { font-size: 12px; color: blue; text-decoration: none; display: block; margin-bottom: 20px; }
+        
+        textarea { width: 100%; height: 100px; margin-top: 10px; border: 1px solid #ccc; padding: 5px; font-family: inherit; }
+        .verbrechen-liste { text-align: left; margin-top: 20px; border-top: 2px solid #800000; padding-top: 10px; }
+        .back-link { font-size: 14px; color: #800000; text-decoration: none; display: block; margin-bottom: 20px; font-weight: bold; }
+        
+        .btn-save { margin-top:15px; background: #800000; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-save:hover { background: #a00000; }
+        
+        .upload-label { font-size: 11px; font-weight: bold; cursor: pointer; color: #007bff; text-decoration: underline; display: inline-block; margin-top: 5px; }
+        .crime-item { background: #fdfdfd; padding: 12px; border-left: 5px solid #800000; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -21,37 +31,47 @@
 <a href="index.html" class="back-link"><< ZURÜCK ZUM DASHBOARD</a>
 
 <div class="profile-card">
-    <h1 id="user-name">Sünder Profil</h1>
+    <h1 id="user-name">Lade Akte...</h1>
     
-    <div class="pfp-container" id="pfp-box">
+    <div class="pfp-container">
         <img id="profile-img" src="https://web.archive.org/web/20090829103447/http://geocities.com/Tokyo/Pagoda/4844/guestbook.gif">
     </div>
     
-    <input type="file" id="img-input" accept="image/*" style="font-size: 10px;">
+    <label class="upload-label">
+        🖼️ Profilbild ändern
+        <input type="file" id="pfp-input" accept="image/*" onchange="uploadPFP(this)" style="display: none;">
+    </label>
     
     <h3>Meine Bio:</h3>
+    <p style="font-size: 11px; color: #666; margin: 0;">(z.B. deine Vorräte an Pak Choi & Currypaste)</p>
     <textarea id="bio-input" placeholder="Warum tust du das dem Döner an?"></textarea>
     <br>
-    <button onclick="saveProfile()" style="margin-top:10px; background: #D2B48C;">PROFIL SPEICHERN</button>
+    <button class="btn-save" onclick="saveProfile()">PROFIL IN CLOUD SPEICHERN</button>
 
     <div class="verbrechen-liste">
         <h3>Begangene Verbrechen:</h3>
-        <ul id="user-crimes">
+        <ul id="user-crimes" style="list-style: none; padding: 0;">
             </ul>
     </div>
 </div>
 
-<script src="logik.js"></script> <script>
-    // 1. Die Hash-Werte deiner Favoriten (Passwörter)
+<script src="logik.js"></script> 
+<script>
+// 1. Die verifizierten Hash-Werte (Passwörter)
 const passwordHashes = {
-    0: "b7c45477ab3ddec036c0ea808f143625aec0f8cb262a880659e6239f25ff349a", // petersilie
+    0: "266497274070a98f9d0c6407f3542289c381665a587440660f545465e6383a1b", // petersilie
     1: "7514b4a1337d13d6cda65fe3d5bd1d476340c766666bea6fda9a6a9cd272accd", // erdnuss
-    2: "85b0d20515d5e24656ab994daf11544b6ed7d27a3bc79bc03bc1fc5694398456", // zitronengras
-    3: "0b8e0d9bc8319e36a0da967bc51511b1a70f22af4ae2b1b3b723e49df8775a65", // curry
-    4: "cc52e9ceb39eabd803ce34abace35a582f9869d00844af61740120b0f42bdc81"  // tofu
+    2: "02c3859663e26087b3e0c077b96e5d898517228a4788390b106263546a16174a", // zitronengras
+    3: "6784d852ca2e6e3c08003117462c19e59275a596167823b16027376c962b3c22", // curry
+    4: "0e2f5b3a4a75368a5202613589c368686e921d0092305cfcf8d63f0a3597816d"  // tofu
 };
 
-// 2. Die Umwandlungs-Funktion (SHA-256)
+const params = new URLSearchParams(window.location.search);
+const pIdx = parseInt(params.get('id') || "0");
+const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+document.getElementById('user-name').innerText = "Akte: " + personenNamen[pIdx];
+
+// 2. Hilfsfunktionen
 async function getHash(str) {
     const msgUint8 = new TextEncoder().encode(str);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -59,178 +79,66 @@ async function getHash(str) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 3. Die Abfrage-Logik
 async function checkAccess() {
     const input = prompt("Geheimwort für diese Akte eingeben:");
     if (!input) return false;
-    
-    const inputHash = await getHash(input);
-    if (inputHash === passwordHashes[pIdx]) {
-        return true;
-    } else {
-        alert("ZUGRIFF VERWEIGERT!");
-        return false;
-    }
+    const inputHash = await getHash(input.toLowerCase().trim());
+    if (inputHash === passwordHashes[pIdx]) return true;
+    alert("ZUGRIFF VERWEIGERT!");
+    return false;
 }
 
-
-async function saveProfile() {
-    if (await checkAccess()) {
-        const bio = document.getElementById('bio-input').value;
-        localStorage.setItem('bio_' + pIdx, bio);
-        alert("Profil gespeichert!");
-
-    }
-}
-const params = new URLSearchParams(window.location.search);
-const pIdx = params.get('id');
-const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
-
-
-document.getElementById('user-name').innerText = "Akte: " + personenNamen[pIdx];
-
+// 3. Page Load: Cloud Daten ziehen
 window.onload = async function() {
-    // 1. Zuerst die Cloud-Daten laden (Bios und Evidenz-Links)
     let cloudData = { scores: {}, bios: {} };
     try {
-        const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json${sasToken}`;
-        const res = await fetch(azureUrl);
-        if (res.ok) {
-            cloudData = await res.json();
-        }
-    } catch (e) {
-        console.warn("Cloud-Daten konnten nicht geladen werden, nutze lokale Backups.");
-    }
+        const res = await fetch(`https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`);
+        if (res.ok) cloudData = await res.json();
+    } catch (e) { console.warn("Cloud-Fehler, nutze Lokal-Daten."); }
 
-    // --- BIO LADEN ---
-    // Wir priorisieren die Cloud, nehmen localStorage als Fallback
+    // Bio laden
     const savedBio = (cloudData.bios && cloudData.bios[pIdx]) || localStorage.getItem('bio_' + pIdx);
     if(savedBio) document.getElementById('bio-input').value = savedBio;
     
-    // --- PROFILBILD LADEN ---
-    const savedImg = localStorage.getItem('pfp_' + pIdx);
-    if(savedImg) document.getElementById('profile-img').src = savedImg;
+    // PFP laden (URL fest aus Cloud)
+    document.getElementById('profile-img').src = `https://stdoenerverbrechen.blob.core.windows.net/beweise/pfp_${pIdx}.jpg?t=${new Date().getTime()}`;
 
-    // --- VERBRECHEN LADEN ---
-    fetch('verbrechen.json')
-        .then(res => res.json())
-        .then(data => {
-            const list = document.getElementById('user-crimes');
-            list.innerHTML = ""; // Liste leeren, falls nötig
-
-            data.forEach((item, vIdx) => {
-                // Prüfen, ob das Verbrechen für diesen User aktiv ist
-                if(localStorage.getItem(`cb_${vIdx}_${pIdx}`) === "true") {
-                    const li = document.createElement('li');
-                    li.style.marginBottom = "20px";
-                    
-                    // Wir suchen den Bild-Link: 1. Im localStorage, 2. (optional) in cloudData
-                    const evidenceKey = `evidence_${pIdx}_${vIdx}`;
-                    const savedEvidence = localStorage.getItem(evidenceKey);
-                    
-                    li.innerHTML = `
-                        <div style="background: #fdfdfd; padding: 10px; border-left: 5px solid #800000; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                            <b style="color: #333;">${item[0]}</b> <span style="color: #800000; font-size: 0.9em;">(${item[1]} Pkt)</span><br>
-                            <div id="img_cont_${vIdx}" style="margin-top:8px;">
-                                ${savedEvidence ? 
-                                    `<img src="${savedEvidence}" style="max-width:100%; border-radius: 4px; border:1px solid #ddd; margin-bottom: 5px;"><br>` 
-                                    : `<p style="font-size: 11px; color: #999;">Kein Beweisfoto hinterlegt</p>`}
-                                <label style="font-size: 11px; font-weight: bold; cursor: pointer; color: #007bff;">
-                                    📸 Foto aufnehmen/hochladen
-                                    <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
-                                </label>
-                            </div>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                }
-            });
+    // Verbrechen laden
+    fetch('verbrechen.json').then(res => res.json()).then(data => {
+        const list = document.getElementById('user-crimes');
+        data.forEach((item, vIdx) => {
+            if(localStorage.getItem(`cb_${vIdx}_${pIdx}`) === "true") {
+                const li = document.createElement('li');
+                li.className = "crime-item";
+                const evidenceKey = `evidence_${pIdx}_${vIdx}`;
+                const savedEvid = localStorage.getItem(evidenceKey);
+                
+                li.innerHTML = `
+                    <b>${item[0]}</b> (${item[1]} Pkt)<br>
+                    <div style="margin-top:8px;">
+                        ${savedEvid ? `<img src="${savedEvid}" style="max-width:100%; border-radius:4px; margin-bottom:5px;"><br>` : ''}
+                        <label class="upload-label">
+                            📸 Beweis-Foto hochladen
+                            <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
+                        </label>
+                    </div>
+                `;
+                list.appendChild(li);
+            }
         });
+    });
 };
 
-// DIE NEUE TECHNIK: Upload direkt zu Azure
-async function uploadEvidenceToAzure(input, vIdx) {
-    if (!input.files || !input.files[0]) return;
-    const hatZugriff = await checkAccess(); 
-    if (!hatZugriff) {
-        input.value = ""; // Auswahl zurücksetzen, damit man erneut klicken muss
-        return; // Funktion hier abbrechen!
-    }
-    const file = input.files[0];
-    const fileName = `evidence_${pIdx}_${vIdx}.jpg`; // Eindeutiger Name pro Verbrechen & Person
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${fileName}?${sasToken}`;
-
-    // Optisches Feedback
-    input.disabled = true;
-    console.log("Sende Beweis zu Azure...");
-
-    try {
-        const response = await fetch(azureUrl, {
-            method: 'PUT',
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.type
-            },
-            body: file
-        });
-
-        if (response.ok) {
-            // Wir speichern nur die URL (ohne SAS-Token) im localStorage
-            const finalImageUrl = azureUrl.split('?')[0];
-            localStorage.setItem(`evidence_${pIdx}_${vIdx}`, finalImageUrl);
-            
-            alert("Beweisfoto in der Cloud gesichert!");
-            location.reload(); 
-        } else {
-            alert("Azure Fehler: " + response.statusText);
-        }
-    } catch (err) {
-        console.error("Upload fehlgeschlagen:", err);
-        alert("Upload fehlgeschlagen. Hast du Internet?");
-    } finally {
-        input.disabled = false;
-    }
-}
-
-// Bio & Profilbild-Pfad speichern
+// 4. Speicher-Funktionen
 async function saveProfile() {
-    const hatZugriff = await checkAccess();
-    if (!hatZugriff) return
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
+    if (!(await checkAccess())) return;
     
+    const bioText = document.getElementById('bio-input').value;
+    localStorage.setItem('bio_' + pIdx, bioText);
+
     try {
-        // Erst die aktuellen Scores laden, um nichts zu überschreiben
-        const response = await fetch(azureUrl);
-        let data = { scores: {}, bios: {} };
+        const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
+        const res = await fetch(azureUrl);
+        let data = res.ok ? await res.json() : { scores: {}, bios: {} };
         
-        if (response.ok) {
-            data = await response.json();
-        }
-
-        // Falls das bios-Objekt noch nicht existiert, erstellen
-        if (!data.bios) data.bios = {};
-        
-        // Bio für die aktuelle Person (pIdx) speichern
-        data.bios[pIdx] = neueBio;
-        data.last_updated = new Date().toISOString();
-
-        // Das aktualisierte JSON wieder hochladen
-        const uploadRes = await fetch(azureUrl, {
-            method: 'PUT',
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!uploadRes.ok) throw new Error("Upload-Fehler");
-        console.log("Bio-Backup in Azure erfolgreich!");
-
-    } catch (err) {
-        console.error("Cloud-Backup der Bio fehlgeschlagen:", err);
-    }
-}
-</script>
-</body>
-</html>
+        if (!data.bios) data
