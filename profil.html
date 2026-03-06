@@ -158,4 +158,41 @@ window.onload = async function() {
     // Profilbild separat laden
     document.getElementById('profile-img').src = `https://stdoenerverbrechen.blob.core.windows.net/beweise/pfp_${pIdx}.jpg?${sasToken}&t=${new Date().getTime()}`;
 };
+async function uploadEvidence(input, vIdx) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Optional: Passwort-Abfrage vor dem Upload
+    const hatZugriff = await checkAccess();
+    if (!hatZugriff) return;
+
+    // Der Dateiname folgt dem Schema: evidence_PERSONID_VERBRECHENID.jpg
+    const blobName = `evidence_${pIdx}_${vIdx}.jpg`;
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${blobName}?${sasToken}`;
+
+    console.log("Starte Upload für Verbrechen " + vIdx + "...");
+
+    try {
+        const response = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': file.type
+            },
+            body: file
+        });
+
+        if (response.ok) {
+            alert("Beweismittel erfolgreich in der Cloud gesichert!");
+            // Seite neu laden, damit das neue Bild erscheint (mit Cache-Buster)
+            window.location.reload(); 
+        } else {
+            alert("Upload fehlgeschlagen. Status: " + response.status);
+            console.error("Azure Fehler-Details:", await response.text());
+        }
+    } catch (err) {
+        console.error("Netzwerkfehler beim Foto-Upload:", err);
+        alert("Fehler beim Hochladen des Beweises.");
+    }
+}
 </script> 
