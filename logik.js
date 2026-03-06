@@ -31,7 +31,7 @@ async function saveToAzure() {
         }
     }
 
-    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?" + sasToken;
     
     try {
         const response = await fetch(azureUrl, {
@@ -48,7 +48,7 @@ async function saveToAzure() {
     }
 }
 async function syncFromAzure() {
-    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json" + sasToken;
+    const azureUrl = "https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?" + sasToken;
     try {
         const response = await fetch(azureUrl);
         if (!response.ok) throw new Error("Cloud-Datei nicht gefunden");
