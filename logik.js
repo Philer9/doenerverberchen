@@ -9,8 +9,8 @@ window.onload = async function() {
         verbrechen_liste = await resp.json();
         await syncFromAzure();
         renderTable();
-        calculateAllScores();
         renderPhotoSlideshow();
+        calculateAllScores();
         console.log("System bereit. Verbrechen geladen:", verbrechen_liste.length);
     } catch (err) {
         console.error("Initialisierungsfehler:", err);
@@ -53,7 +53,7 @@ async function syncFromAzure() {
         const response = await fetch(azureUrl);
         if (!response.ok) throw new Error("Cloud-Datei nicht gefunden");
         const data = await response.json();
-        
+        if (!data.scores) return;
         // Die Cloud-Daten in den lokalen Speicher spiegeln
         Object.keys(data.scores).forEach(pKey => {
             const pIdx = pKey.split('_')[1];
@@ -100,7 +100,10 @@ function calculateAllScores() {
     console.log("Berechne Scores...");
     let html = "<table width='100%' border='1' cellpadding='5' style='background:white;'><tr>";
     let gruppenSchande = 0;
-
+    if (!statsElem || !groupTotalElem) {
+        console.warn("Abbruch: 'stats' oder 'group-total' fehlen im DOM.");
+        return; 
+    }
     personen.forEach((p, pIdx) => {
         let penalty = 0;
         verbrechen_liste.forEach((item, vIdx) => {
@@ -173,4 +176,3 @@ function renderPhotoSlideshow() {
         }
     });
 }
-
