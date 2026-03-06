@@ -92,66 +92,83 @@ async function checkAccess() {
 window.onload = async function() {
     let cloudData = { scores: {}, bios: {} };
     try {
+        // 1. Daten aus der Cloud laden
         const res = await fetch(`https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`);
-        if (res.ok) cloudData = await res.json();
-    } catch (e) { console.warn("Cloud-Fehler, nutze Lokal-Daten."); }
+        if (res.ok) {
+            cloudData = await res.json();
+            console.log("Cloud-Daten geladen:", cloudData);
+        }
+    } catch (e) { 
+        console.error("Cloud-Fehler:", e); 
+    }
 
-    // Bio laden
-    const savedBio = (cloudData.bios && cloudData.bios[pIdx]) || localStorage.getItem('bio_' + pIdx);
-    if(savedBio) document.getElementById('bio-input').value = savedBio;
+    // 2. Bio laden (nur aus Cloud)
+    const savedBio = cloudData.bios ? cloudData.bios[pIdx] : "";
+    document.getElementById('bio-input').value = savedBio || "";
     
-    // PFP laden (URL fest aus Cloud)
+    // 3. Profilbild laden
     document.getElementById('profile-img').src = `https://stdoenerverbrechen.blob.core.windows.net/beweise/pfp_${pIdx}.jpg?t=${new Date().getTime()}`;
 
-    // Verbrechen laden
-    fetch('verbrechen.json').then(res => res.json()).then(data => {
-        const list = document.getElementById('user-crimes');
-        data.forEach((item, vIdx) => {
-            if(localStorage.getItem(`cb_${vIdx}_${pIdx}`) === "true") {
-                const li = document.createElement('li');
-                li.className = "crime-item";
-                const evidenceKey = `evidence_${pIdx}_${vIdx}`;
-                const savedEvid = localStorage.getItem(evidenceKey);
-                
-                li.innerHTML = `
-                    <b>${item[0]}</b> (${item[1]} Pkt)<br>
-                    <div style="margin-top:8px;">
-                        ${savedEvid ? `<img src="${savedEvid}" style="max-width:100%; border-radius:4px; margin-bottom:5px;"><br>` : ''}
-                        <label class="upload-label">
-                            📸 Beweis-Foto hochladen
-                            <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
-                        </label>
-                    </div>
-                `;
-                list.appendChild(li);
-            }
-        });
+    // 4. Verbrechen aus Cloud-Daten anzeigen
+    const respVerbrechen = await fetch('verbrechen.json');
+    const verbrechenListe = await respVerbrechen.json();
+    
+    const list = document.getElementById('user-crimes');
+    list.innerHTML = ""; // Liste leeren
+
+    verbrechenListe.forEach((item, vIdx) => {
+        // PRÜFUNG: Schau direkt in das Cloud-Objekt statt in den LocalStorage
+        const hatVerbrechenBegangen = cloudData.scores && 
+                                      cloudData.scores[`p_${pIdx}`] && 
+                                      cloudData.scores[`p_${pIdx}`][`v_${vIdx}`] === true;
+
+        if (hatVerbrechenBegangen) {
+            const li = document.createElement('li');
+            li.className = "crime-item";
+            
+            // Beweis-URL (falls du Bilder in Azure speicherst, könntest du hier die URL generieren)
+            const evidenceUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/evidence_${pIdx}_${vIdx}.jpg`;
+
+            li.innerHTML = `
+                <b>${item[0]}</b> (${item[1]} Pkt)<br>
+                <div style="margin-top:8px;">
+                    <img src="${evidenceUrl}" onerror="this.style.display='none'" style="max-width:100%; border-radius:4px; margin-bottom:5px;">
+                    <br>
+                    <label class="upload-label">
+                        📸 Beweis-Foto aktualisieren
+                        <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
+                    </label>
+                </div>
+            `;
+            list.appendChild(li);
+        }
     });
+
+    if (list.innerHTML === "") {
+        list.innerHTML = "<li><i>Noch keine Verbrechen aktenkundig. Ein braver Bürger!</i></li>";
+    }
 };
 
 // 4. Speicher-Funktionen
 async function saveProfile() {
     const hatZugriff = await checkAccess();
-    if (!hatZugriff) return
+    if (!hatZugriff) return;
+
+    const neueBio = document.getElementById('bio-input').value;
     const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
     
     try {
-        // Erst die aktuellen Scores laden, um nichts zu überschreiben
+        // Aktuellen Stand holen
         const response = await fetch(azureUrl);
         let data = { scores: {}, bios: {} };
-        
-        if (response.ok) {
-            data = await response.json();
-        }
+        if (response.ok) data = await response.json();
 
-        // Falls das bios-Objekt noch nicht existiert, erstellen
+        // Nur die Bio aktualisieren
         if (!data.bios) data.bios = {};
-        
-        // Bio für die aktuelle Person (pIdx) speichern
         data.bios[pIdx] = neueBio;
         data.last_updated = new Date().toISOString();
 
-        // Das aktualisierte JSON wieder hochladen
+        // Upload
         const uploadRes = await fetch(azureUrl, {
             method: 'PUT',
             headers: {
@@ -161,10 +178,12 @@ async function saveProfile() {
             body: JSON.stringify(data)
         });
 
-        if (!uploadRes.ok) throw new Error("Upload-Fehler");
-        console.log("Bio-Backup in Azure erfolgreich!");
-
+        if (uploadRes.ok) {
+            alert("Akte erfolgreich in der Cloud aktualisiert!");
+        } else {
+            throw new Error("Server-Antwort war nicht ok");
+        }
     } catch (err) {
-        console.error("Cloud-Backup der Bio fehlgeschlagen:", err);
+        alert("Fehler beim Speichern: " + err.message);
     }
 }
