@@ -129,15 +129,42 @@ window.onload = async function() {
     });
 };
 
+// 4. Speicher-Funktionen
 async function saveProfile() {
-    if (!(await checkAccess())) return;
+    const hatZugriff = await checkAccess();
+    if (!hatZugriff) return
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
     
-    const bioText = document.getElementById('bio-input').value;
-    localStorage.setItem('bio_' + pIdx, bioText);
-
     try {
-        const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
-        const res = await fetch(azureUrl);
-        let data = res.ok ? await res.json() : { scores: {}, bios: {} };
+        // Erst die aktuellen Scores laden, um nichts zu überschreiben
+        const response = await fetch(azureUrl);
+        let data = { scores: {}, bios: {} };
         
-        if (!data.bios) data
+        if (response.ok) {
+            data = await response.json();
+        }
+
+        // Falls das bios-Objekt noch nicht existiert, erstellen
+        if (!data.bios) data.bios = {};
+        
+        // Bio für die aktuelle Person (pIdx) speichern
+        data.bios[pIdx] = neueBio;
+        data.last_updated = new Date().toISOString();
+
+        // Das aktualisierte JSON wieder hochladen
+        const uploadRes = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!uploadRes.ok) throw new Error("Upload-Fehler");
+        console.log("Bio-Backup in Azure erfolgreich!");
+
+    } catch (err) {
+        console.error("Cloud-Backup der Bio fehlgeschlagen:", err);
+    }
+}
