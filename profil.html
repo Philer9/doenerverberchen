@@ -34,7 +34,7 @@
     <h1 id="user-name">Lade Akte...</h1>
     
     <div class="pfp-container">
-        <img id="profile-img" src="https://web.archive.org/web/20090829103447/http://geocities.com/Tokyo/Pagoda/4844/guestbook.gif">
+        <img id="profile-img" src="">
     </div>
     
     <label class="upload-label">
@@ -51,13 +51,17 @@
     <div class="verbrechen-liste">
         <h3>Begangene Verbrechen:</h3>
         <ul id="user-crimes" style="list-style: none; padding: 0;">
-            </ul>
+            <li>Lade Sündenregister...</li>
+        </ul>
     </div>
 </div>
 
 <script src="logik.js"></script> 
 <script>
-// 1. Die verifizierten Hash-Werte (Passwörter)
+// Konfiguration
+const params = new URLSearchParams(window.location.search);
+const pIdx = parseInt(params.get('id') || "0");
+const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
 const passwordHashes = {
     0: "266497274070a98f9d0c6407f3542289c381665a587440660f545465e6383a1b", // petersilie
     1: "7514b4a1337d13d6cda65fe3d5bd1d476340c766666bea6fda9a6a9cd272accd", // erdnuss
@@ -66,12 +70,10 @@ const passwordHashes = {
     4: "0e2f5b3a4a75368a5202613589c368686e921d0092305cfcf8d63f0a3597816d"  // tofu
 };
 
-const params = new URLSearchParams(window.location.search);
-const pIdx = parseInt(params.get('id') || "0");
-const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+// Name setzen
 document.getElementById('user-name').innerText = "Akte: " + personenNamen[pIdx];
 
-// 2. Hilfsfunktionen
+// Hilfsfunktion für Passwort
 async function getHash(str) {
     const msgUint8 = new TextEncoder().encode(str);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -80,7 +82,7 @@ async function getHash(str) {
 }
 
 async function checkAccess() {
-    const input = prompt("Geheimwort für diese Akte eingeben:");
+    const input = prompt("Geheimwort für diese Akte:");
     if (!input) return false;
     const inputHash = await getHash(input.toLowerCase().trim());
     if (inputHash === passwordHashes[pIdx]) return true;
@@ -88,135 +90,72 @@ async function checkAccess() {
     return false;
 }
 
-// 3. Page Load: Cloud Daten ziehen
+// Initiales Laden
 window.onload = async function() {
+    console.log("Starte Profil-Ladeprozess für pIdx:", pIdx);
     let cloudData = { scores: {}, bios: {} };
+
     try {
-        // 1. Daten aus der Cloud laden (scores.json)
+        // 1. Scores laden
         const res = await fetch(`https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`);
         if (res.ok) {
             cloudData = await res.json();
+            console.log("Cloud-Daten erfolgreich empfangen:", cloudData);
         }
-    } catch (e) { 
-        console.warn("Cloud-Fehler, Profil wird unvollständig angezeigt."); 
-    }
 
-    // 2. Bio laden
-    const savedBio = (cloudData.bios && cloudData.bios[pIdx]) || "";
-    document.getElementById('bio-input').value = savedBio;
-    
-    // 3. Profilbild laden
-    document.getElementById('profile-img').src = `https://stdoenerverbrechen.blob.core.windows.net/beweise/pfp_${pIdx}.jpg?t=${new Date().getTime()}`;
+        // 2. Bio anzeigen
+        if (cloudData.bios && cloudData.bios[pIdx]) {
+            document.getElementById('bio-input').value = cloudData.bios[pIdx];
+        }
 
-    // 4. Verbrechen-Liste abgleichen
-    try {
-        const respVerbrechen = await fetch('verbrechen.json');
-        const verbrechenListe = await respVerbrechen.json();
+        // 3. Verbrechen Definitionen laden
+        const respV = await fetch('verbrechen.json');
+        const verbrechenListe = await respV.json();
+        
         const listContainer = document.getElementById('user-crimes');
-        listContainer.innerHTML = ""; // Container leeren
+        listContainer.innerHTML = ""; // Platzhalter entfernen
 
-        verbrechenListe.forEach((item, vIdx) => {
-            // Prüfung: Hat diese Person (pIdx) dieses Verbrechen (vIdx) in der Cloud markiert?
-            const hatVerbrechen = cloudData.scores && 
-                                  cloudData.scores[`p_${pIdx}`] && 
-                                  cloudData.scores[`p_${pIdx}`][`v_${vIdx}`] === true;
+        // 4. Abgleich mit der Struktur aus dem Screenshot
+        const personKey = `p_${pIdx}`;
+        const personScores = cloudData.scores ? cloudData.scores[personKey] : null;
 
-            if (hatVerbrechen) {
-                const li = document.createElement('li');
-                li.className = "crime-item";
-                
-                // Wir generieren den Pfad zum Beweisbild (falls vorhanden)
-                const evidenceUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/evidence_${pIdx}_${vIdx}.jpg`;
-                
-                li.innerHTML = `
-                    <b>${item[0]}</b> (${item[1]} Pkt)<br>
-                    <div style="margin-top:8px;">
-                        <img src="${evidenceUrl}" onerror="this.style.display='none'" style="max-width:100%; border-radius:4px; margin-bottom:5px;">
-                        <br>
-                        <label class="upload-label">
-                            📸 Beweis-Foto hochladen
-                            <input type="file" accept="image/*" capture="camera" onchange="uploadEvidenceToAzure(this, ${vIdx})" style="display: none;">
-                        </label>
-                    </div>
-                `;
-                listContainer.appendChild(li);
-            }
-        });
+        if (personScores) {
+            verbrechenListe.forEach((item, vIdx) => {
+                const verbrechenKey = `v_${vIdx}`;
+                // WICHTIG: Prüfung auf echtes boolean true (wie im Screenshot zu sehen)
+                if (personScores[verbrechenKey] === true) {
+                    console.log("Verbrechen aktiv:", item[0]);
+                    const li = document.createElement('li');
+                    li.className = "crime-item";
+                    
+                    const evidenceUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/evidence_${pIdx}_${vIdx}.jpg?${sasToken}&t=${new Date().getTime()}`;
+                    
+                    li.innerHTML = `
+                        <b>${item[0]}</b> (${item[1]} Pkt)<br>
+                        <div style="margin-top:8px;">
+                            <img src="${evidenceUrl}" onerror="this.style.display='none'" style="max-width:100%; border-radius:4px; margin-bottom:5px;">
+                            <br>
+                            <label class="upload-label">
+                                📸 Beweis-Foto hochladen
+                                <input type="file" accept="image/*" capture="camera" onchange="uploadEvidence(this, ${vIdx})" style="display: none;">
+                            </label>
+                        </div>
+                    `;
+                    listContainer.appendChild(li);
+                }
+            });
+        }
 
         if (listContainer.innerHTML === "") {
-            listContainer.innerHTML = "<li><i>Diese Weste ist (noch) rein. Keine Verbrechen gefunden.</i></li>";
+            listContainer.innerHTML = "<li><i>Keine aktiven Verbrechen in der Akte gefunden.</i></li>";
         }
-    } catch (err) {
-        console.error("Fehler beim Laden der Verbrechen-Definitionen:", err);
+
+    } catch (e) {
+        console.error("KRITISCHER FEHLER beim Laden des Profils:", e);
+        document.getElementById('user-crimes').innerHTML = "<li><font color='red'>Fehler beim Laden der Daten!</font></li>";
     }
+
+    // Profilbild separat laden
+    document.getElementById('profile-img').src = `https://stdoenerverbrechen.blob.core.windows.net/beweise/pfp_${pIdx}.jpg?${sasToken}&t=${new Date().getTime()}`;
 };
-
-// 4. Speicher-Funktionen
-async function saveProfile() {
-    const hatZugriff = await checkAccess();
-    if (!hatZugriff) return;
-
-    const neueBio = document.getElementById('bio-input').value;
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
-    
-    try {
-        // Aktuellen Stand holen
-        const response = await fetch(azureUrl);
-        let data = { scores: {}, bios: {} };
-        if (response.ok) data = await response.json();
-
-        // Nur die Bio aktualisieren
-        if (!data.bios) data.bios = {};
-        data.bios[pIdx] = neueBio;
-        data.last_updated = new Date().toISOString();
-
-        // Upload
-        const uploadRes = await fetch(azureUrl, {
-            method: 'PUT',
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (uploadRes.ok) {
-            alert("Akte erfolgreich in der Cloud aktualisiert!");
-        } else {
-            throw new Error("Server-Antwort war nicht ok");
-        }
-    } catch (err) {
-        alert("Fehler beim Speichern: " + err.message);
-    }
-}
-async function uploadEvidenceToAzure(input, vIdx) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const hatZugriff = await checkAccess();
-    if (!hatZugriff) return;
-
-    // Jedes Verbrechen bekommt ein eigenes Bild pro Person
-    const blobName = `evidence_${pIdx}_${vIdx}.jpg`;
-    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${blobName}?${sasToken}`;
-
-    try {
-        const response = await fetch(azureUrl, {
-            method: 'PUT',
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.type
-            },
-            body: file
-        });
-
-        if (response.ok) {
-            alert("Beweismittel erfolgreich in der Cloud gesichert!");
-            window.location.reload(); 
-        } else {
-            alert("Upload fehlgeschlagen. Status: " + response.status);
-        }
-    } catch (err) {
-        alert("Fehler beim Hochladen des Beweises.");
-    }
-}
+</script> 
