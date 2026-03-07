@@ -195,4 +195,76 @@ async function uploadEvidence(input, vIdx) {
         alert("Fehler beim Hochladen des Beweises.");
     }
 }
+async function uploadPFP(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Passwort-Abfrage
+    const hatZugriff = await checkAccess();
+    if (!hatZugriff) return;
+
+    // Dateiname ist fest: pfp_0.jpg, pfp_1.jpg etc.
+    const blobName = `pfp_${pIdx}.jpg`;
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/${blobName}?${sasToken}`;
+
+    try {
+        const response = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': file.type
+            },
+            body: file
+        });
+
+        if (response.ok) {
+            alert("Profilbild wurde aktualisiert!");
+            window.location.reload(); 
+        } else {
+            alert("Upload fehlgeschlagen: " + response.status);
+        }
+    } catch (err) {
+        console.error("PFP Upload Fehler:", err);
+    }
+}
+async function saveProfile() {
+    const hatZugriff = await checkAccess();
+    if (!hatZugriff) return;
+
+    const neueBio = document.getElementById('bio-input').value;
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/scores.json?${sasToken}`;
+    
+    try {
+        // 1. Aktuellen Stand der Cloud laden, um keine Scores zu löschen
+        const response = await fetch(azureUrl);
+        let data = { scores: {}, bios: {} };
+        if (response.ok) {
+            data = await response.json();
+        }
+
+        // 2. Nur den Bio-Eintrag für diese Person ändern
+        if (!data.bios) data.bios = {};
+        data.bios[pIdx] = neueBio;
+        data.last_updated = new Date().toISOString();
+
+        // 3. Das gesamte Paket zurück zu Azure schicken
+        const uploadRes = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (uploadRes.ok) {
+            alert("Biografie wurde in der Cloud gespeichert!");
+        } else {
+            throw new Error("Fehler beim Hochladen");
+        }
+    } catch (err) {
+        console.error("Bio-Speicherfehler:", err);
+        alert("Konnte Bio nicht speichern.");
+    }
+}
 </script> 
