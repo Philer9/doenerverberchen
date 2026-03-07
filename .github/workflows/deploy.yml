@@ -42,13 +42,3 @@ jobs:
             --pattern "*" \
             --overwrite true
 
-    # 3. NUR den Inhalt des lokalen Ordners 'beweise' in den Container 'beweise' hochladen
-    - name: Upload Data to beweise container
-      uses: azure/CLI@v1
-      with:
-        inlineScript: |
-          az storage blob upload-batch \
-            --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
-            --destination 'beweise' \
-            --source ./beweise \
-            --overwrite true
