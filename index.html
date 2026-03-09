@@ -3,56 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <title>+++ DOENER-VERBRECHEN 2026 +++</title>
- </head>
-<body bgcolor="#F5F5DC" text="#800000">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body bgcolor="#F5F5DC" text="#800000" link="#0000FF" vlink="#800080">
+
 <center>
-    <marquee bgcolor="#FFFF00">+++ REINHEITSGEBOT AUSSER KRAFT GESETZT +++</marquee>
+    <marquee bgcolor="#FFFF00" scrollamount="15" style="border: 2px solid red;">
+        +++ 100% KALBFLEISCH-GARANTIE (ODER ZUMINDEST ETWAS ÄHNLICHES) +++ 
+GAFFA-TAPE REPARIERT DEINE LEBER NICHT, ABER DEIN ZELT +++ 
+WARNUNG: DÖNER-SAUCE IM USB-PORT ERKANNT +++ 
+DER GERÄT WIRD NIEMALS MÜDE, DER GERÄT SCHLÄFT NIE +++ 
+WETTERBERICHT: 100% CHANCE AUF KNOBLAUCHFAHNE +++ 
+BIER-LEITUNG ZU ZELTPLATZ 4 UNTERBROCHEN +++ 
+DÖNER-NUTELLA-HEFEZOPF: DIE EINZIG WAHRE MAHLZEIT NACH 4 UHR MORGENS +++ 
+BITTE KEINE ALUFOLIE IN DEN MIKROWELLEN-DÖNER +++ 
+ZWIEBELN SIND DAS NATÜRLICHE DEO DES FESTIVAL-GÄNGERS +++ 
+INSTALLIERE 'DÖNER_DRIVER_V3.EXE' FÜR MEHR SCHARF +++ 
+WURST-CASUS-KNACKTUS: WENN DER SPIESS SICH NICHT MEHR DREHT +++ 
+HALBINSEL POUCH ZUM UNABHÄNGIGEN DÖNER-STAAT ERKLÄRT +++ 
+BITTE NICHT AM DÖNER-SPIESS LECKEN (AUCH NICHT BEI WETTEINSATZ) +++ 
+REINHEITSGEBOT? WIR NENNEN ES 'SERVIERVORSCHLAG' +++ 
+FEHLER 404: KNACKIGES FLACHBROT NICHT GEFUNDEN +++ 
+ACHTUNG: FLIEGENDE FALAFEL IN DER MOSHPIT-ZONE +++ 
+PETER ZWIEBEL SAGT: 'WER DAS LIEST, HAT HUNGER' +++ 
+DÖNER-SAUCE ALS SONNENSCHUTZFAKTOR 'FETTIG' ZUGELASSEN +++ 
+ZELTHERINGE GEGEN DÖNERSPIESSE GETAUSCHT - SCHLECHTE IDEE +++ 
+DAS 'S' IN SSB STEHT FÜR 'SCHARF MIT ALLES' +++ 
+SYSTEM-UPDATE: DEIN MAGEN AKZEPTIERT JETZT AUCH KALTE PIZZA (AUSNAHME NIKLAS)+++ 
+WETTERBERICHT: 100% CHANCE AUF KNOBLAUCHFAHNE +++ 
+KEIN PFAND AUF DÖNERBOXEN? EINE FRECHHEIT DER MODERNE +++ 
+MEHR RAM HERUNTERGELADEN - DER SPIESS DREHT JETZT MIT 12.000 RPM +++ 
+DÖNER-VERBRECHEN-DASHBOARD: OFFIZIELL VOM REINHEITSGEBOT-AMT GEHASST +++ 
+VORSICHT VOR DEM 'SCHLAGER-DÖNER' - ER SINGT BEIM ESSEN +++ 
+GUMMISTIEFEL-PUNCH AUS DER DÖNER-SAUCEN-PUMPE +++ 
+DEIN DÖNER IST JETZT COMPATIBEL MIT WINDOWS 95 +++ 
+WASSER IST NUR ZUM WASCHEN DA, DÖNER IST ZUM ESSEN DA +++ 
++++ ENDE DER DURCHSAGE - BITTE WEITERFRESSEN +++
+    </marquee>
 
-    <table width="800" border="3" cellpadding="10" bgcolor="#FFFFFF">
+    <table width="1300" border="0" cellpadding="5" cellspacing="0" target="_blank">
         <tr>
-            <td>
-                <h1>Döner-Verbrechen Dashboard</h1>
-                
-                <div style="background:#D2B48C; border:3px double #800000; padding:15px; text-align:center; margin-bottom:20px;">
-                    <b style="font-size: 1.2em;">ZUFALLS-SÜNDE GENERATOR</b><br>
-                    <p style="font-size: 0.8em;">Erfinde ein neues Verbrechen basierend auf deinen Vorräten!</p>
-                    <button onclick="generateCrime()" style="font-family:'Comic Sans MS'; padding:10px; cursor:pointer; background:#FF4500; color:white; border:none; font-weight:bold;">
-                        JETZT VERBRECHEN WÜRFELN!
+            <td class="sidebar-ad">
+                <a href="https://www.ebay.de/itm/174114828659" class="fake-ad-box" target="_blank">
+                    <span class="blink">GEWINNE GEWINNE GEWINNE</span><br>
+                    Einen 50€ Gutschein für<br><b>Döner</b>!<br>
+                    <span class="money">$$$</span><br>
+                    <small>Klick hier bevor das Fleisch alle ist!</small>
+                </a>
+                <div class="fake-ad-box" style="background: #ff00ff; color: white;" target="_blank">
+                    <span class="blink">SSB SURVIVAL TIPP</span><br>
+                    <hr size="5" color="black">
+                    <div id="ssb-tip-text">Lade Überlebensstrategie...</div>
+                    
+                    <button onclick="triggerTripleChaos(), rotateSurvivalTip()" style="width:100%; height:50px; font-weight:bold; cursor:pointer;">
+                        NÄCHSTER TIPP
                     </button>
-                    <div id="crime-result" style="margin-top:10px;">
-                        </div>
                 </div>
+            </td>
 
-                <div id="score-board">
-                    <b>REINHEITSGEBOT-O-METER:</b>
-                    <div id="stats">Lädt...</div>
-                    <p>Gruppen-Schande-Gesamt: <b id="group-total">0</b> Punkte</p>
-                </div>
-                <center>
-                    <fieldset style="width: 780px; background:#FFFACD; border: 2px dashed red; padding: 10px; margin-bottom: 20px; text-align: left;">
-                        <legend><b><font face="Comic Sans MS">DIE SKALA DER SCHANDE (LEGENDE)</font></b></legend>
-                        <font face="Arial" size="2">
-                            <font color="green">1-3: <b>Döner-Duldung</b></font> (Akzeptabel bei >2 Promille)<br>
-                            <font color="orange">4-6: <b>Kebab-Ketzerei</b></font> (Hinter vorgehaltener Hand genießbar)<br>
-                            <font color="#FF4500">7-9: <b>Fleisch-Frevler</b></font> (Hausverbot in Istanbul)<br>
-                            <font color="red">10: <b>Kulinarisches Kriegsverbrechen</b></font> (Anzeige ist raus)
-                        </font>
-                    </fieldset>
-                </center>
-                <hr>
+            <td class="sidebar-ad">
+                <a href="https://www.amazon.de/s?k=kohletabletten+hund" class="fake-ad-box" style="background: white; border-color: blue;" target="_blank">
+                    <span style="font-size: 20px;">💾</span><br>
+                    <b>TREIBER UPDATE</b><br>
+                    Dein Magen-Treiber (v2.0) ist veraltet.<br>
+                    <div style="background: blue; color: white; margin-top: 5px;">JETZT FIXEN</div>
+                </a>
+                <a href="https://www.amazon.de/s?k=gaffa+tape" class="fake-ad-box" style="background: silver;" target="_blank">
+                    <span class="blink">GAFFA-TAPE DEAL!</span><br>
+                    Hält Zelte, Träume und Döner zusammen!<br>
+                    <b>NUR 4,99€</b>
+                </a>
+            </td>
 
-                <table id="crime-table" border="1" width="100%" cellpadding="3" cellspacing="0">
-                    <tr bgcolor="#D2B48C">
-                        <th>VERBRECHEN</th>
-                        <th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th>
-                        <th>INFO</th>
+            <td width="800">
+                <table width="800" border="3" cellpadding="10" bgcolor="#FFFFFF" style="border-color: #800000;">
+                    <tr>
+                        <td>
+                            <center>
+                                <h1>Döner-Verbrechen Dashboard <span class="new-badge">NEW!</span></h1>
+                                <div style="background:#D2B48C; border:3px double #800000; padding:15px; text-align:center; margin-bottom:20px;">
+                                    <button onclick="generateCrime()" style="font-family:'Comic Sans MS'; padding:15px; cursor:pointer; background:#FF4500; color:white; border:4px outset #ffcc00; font-weight:bold; font-size: 1.5em;">
+                                        🔥 SERVIERVORSCHLAG GENERIEREN! 🔥
+                                    </button>
+                                    <div id="crime-result" style="margin-top:10px; font-size: 1.2em; border: 1px dashed black; padding: 5px;"></div>
+                                </div>
+                                <div id="score-board" style="background: #000; color: #0f0; padding: 10px; font-family: monospace;">
+                                    [SYSTEM] REINHEITSGEBOT STATUS: CRITICAL<br>
+                                    [STATS] <span id="stats">Lädt Schande...</span><br>
+                                    [TOTAL] <span id="group-total">0</span> POINTS OF SHAME
+                                </div>
+                                <hr>
+                                <table id="crime-table" border="1" width="100%" cellpadding="3" cellspacing="0">
+                                    <tr bgcolor="#D2B48C"><th>VERBRECHEN</th><th>P1-P5</th><th>INFO</th></tr>
+                                </table>
+                            </center>
+                        </td>
                     </tr>
                 </table>
             </td>
+
+            <td class="sidebar-ad">
+                <a href="#" id="scam-ad-link" class="fake-ad-box" style="background: black; color: gold; border-color: gold;" target="_blank">
+                    <div id="scam-ad-content">
+                        <b>REICH WERDEN</b><br>
+                        <span id="scam-text">Lade Reichtum...</span><br>
+                        <span id="scam-emoji" style="font-size: 25px;">💎</span>
+                    </div>
+                </a>
+                <a href="https://www.youtube.com/watch?v=4m1EFMoRFvY&list=RD4m1EFMoRFvY&start_radio=1" class="fake-ad-box" style="background: #00ff00;">
+                    <span class="blink">SINGLE DÖNER</span><br>
+                    In deiner Nähe suchen nach Beilage!<br>
+                    <img src="https://via.placeholder.com/100x60/FF00FF/000000?text=HOT+ONION" style="margin-top:5px;">
+                </a>
+            </td>
+
+            <td class="sidebar-ad">
+                <a href="#" class="fake-ad-box">
+                    <b>WURST-WARNUNG!</b><br>
+                    <marquee scrollamount="2" direction="up" height="30" style="background: white;">
+                        Bratwurst<br>Bockwurst<br>Currywurst<br>Hans-Wurst
+                    </marquee>
+                </a>
+                <div class="fake-ad-box" style="background: red; color: yellow;">
+                    <b>!!! ERROR !!!</b><br>
+                    Dein Döner ist zu gesund. Bitte füge mehr Knoblauch hinzu.
+                </div>
+            </td>
         </tr>
     </table>
-</center>
 
+    <marquee direction="right" scrollamount="20"><img src="https://via.placeholder.com/50x50?text=🏃" alt="Lauf"> </marquee>
+</center>
 
 <script src="logik.js"></script>
 </body>
