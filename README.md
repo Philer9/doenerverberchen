@@ -1,0 +1,1 @@
+[![Azure Static Web Apps CI/CD](https://github.com/Philer9/doenerverberchen/actions/workflows/azure-static-web-apps-nice-wave-080d71a03.yml/badge.svg)](https://github.com/Philer9/doenerverberchen/actions/workflows/azure-static-web-apps-nice-wave-080d71a03.yml)
