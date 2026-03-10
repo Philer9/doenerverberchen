@@ -3,7 +3,7 @@ name: Deploy Website to Azure
 on:
   push:
     branches:
-      - main
+      
 
 jobs:
   build-and-deploy:
