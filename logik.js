@@ -207,9 +207,32 @@ function renderTable() {
     });
 }
 
-function updateScore(id) {
+async function updateScore(id) {
     const cb = document.getElementById(id);
-    if(cb) {
+    if(!cb) return;
+
+    // 1. Prüfen, ob wir in dieser Sitzung schon freigeschaltet sind
+    let isAdmin = sessionStorage.getItem('isDönerAdmin') === 'true';
+
+    // 2. Falls nicht, einmalig Passwort abfragen
+    if (!isAdmin) {
+        const passwort = prompt("Admin-Passwort erforderlich, um Schande zu loggen:");
+        // Wir nutzen den Hash-Check aus deiner profil.html Logik
+        const hash = await getHash(passwort?.toLowerCase().trim() || "");
+        
+        // Hier eines deiner Passwörter prüfen (z.B. das von Person 1)
+        if (hash === "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08") {
+            sessionStorage.setItem('isDönerAdmin', 'true');
+            isAdmin = true;
+        } else {
+            alert("ZUGRIFF VERWEIGERT! Der Spieß dreht sich weiter...");
+            cb.checked = !cb.checked; // Haken visuell zurücksetzen
+            return;
+        }
+    }
+
+    // 3. Wenn autorisiert, ganz normal speichern
+    if(isAdmin) {
         localStorage.setItem(id, cb.checked);
         calculateAllScores();
         saveToAzure();
