@@ -60,7 +60,6 @@ window.onload = async function() {
         displayBio(cloudData.bios);
         displayUserCrimes(cloudData.scores, verbrechenListe, listContainer);
         displayProfileImage();
-        checkAccess();
 
     } catch (error) {
         console.error("KRITISCHER FEHLER beim Laden des Profils:", error);
