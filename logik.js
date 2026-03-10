@@ -6,7 +6,7 @@ const sauce = ["Knoblauch (Extrem)", "Kräuter (Standard)", "Scharf (Tränen-Gar
 const extras = ["Zwiebeln (roh)", "Rotkohl", "Eisbergsalat", "Tomate/Gurke (wässrig)", "Schafskäse-Ersatz", "Mais (warum auch immer)"];
 
 // HIER NUR DEN STRING NACH DEM ? EINTRAGEN
-const sasToken = "sv=2024-11-04&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2026-03-14T05:52:01Z&st=2026-03-06T21:37:01Z&spr=https&sig=4sfn1%2BHA0I%2BqEDjjO259Z1%2BFR5kIG%2FwoL0bUmNYMATg%3D";
+const sasToken = "___SAS_TOKEN_PLACEHOLDER___";
 const ssbSurvivalTips = [
     "Dönerpapier als wasserfeste Socken nutzen (hält bis zu 3 Pfützen).",
     "Gaffa-Tape ist die einzige gültige Währung auf der Halbinsel Pouch.",

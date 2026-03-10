@@ -24,6 +24,21 @@ jobs:
           lfs: false
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
+      - name: Inject SAS Token
+        env:
+          SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
+        run: |
+        # Wir nutzen Python, da es keine Probleme mit Sonderzeichen wie '&' hat
+          python3 -c "
+          import os
+          token = os.environ['SAS_TOKEN']
+          for filename in ['logik.js', 'profil.html']:
+              if os.path.exists(filename):
+                  with open(filename, 'r') as f:
+                      content = f.read()
+                  with open(filename, 'w') as f:
+                      # Ersetzt den Platzhalter sicher durch den echten Token
+                      f.write(content.replace('___SAS_TOKEN_PLACEHOLDER___', token))
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
