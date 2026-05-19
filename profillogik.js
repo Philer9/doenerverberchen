@@ -1,7 +1,7 @@
 // Konfiguration
 const params = new URLSearchParams(window.location.search);
 const pIdx = parseInt(params.get('id') || "0");
-const personenNamen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+const personenNamen = ["Niklas", "David", "Thimo", "Philipp", "Fabi"];
 const passwordHashes = {
     0: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
     1: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
