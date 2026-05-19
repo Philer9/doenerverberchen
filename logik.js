@@ -1,4 +1,4 @@
-const personen = ["Person 1", "Person 2", "Person 3", "Person 4", "Person 5"];
+const personen = ["Niklas", "David", "Thimo", "Philipp", "Fabi"];
 let verbrechen_liste = [];
 const brot = ["Fladenbrot (labberig)", "Vollkorn-Fladen (warum?)", "Dürum-Fladen", "Brot-Endstück"];
 const fleisch = ["Kalb (Hackfleisch-Art)", "Hähnchen (knorpelig)", "Veggie-Saitan", "Fleisch-Ersatz (unidentifizierbar)"];
@@ -226,7 +226,7 @@ async function updateScore(id) {
         const hash = await getHash(passwort?.toLowerCase().trim() || "");
         
         // Hier eines deiner Passwörter prüfen (z.B. das von Person 1)
-        if (hash === "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08") {
+        if (hash === "e54baa88b023e4a1dcdf04e089eeb0e552f0d8550c2fdd1df5f02dbf094c6030") {
             sessionStorage.setItem('isDönerAdmin', 'true');
             isAdmin = true;
         } else {
