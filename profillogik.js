@@ -3,11 +3,11 @@ const params = new URLSearchParams(window.location.search);
 const pIdx = parseInt(params.get('id') || "0");
 const personenNamen = ["Niklas", "David", "Thimo", "Philipp", "Fabi"];
 const passwordHashes = {
-    0: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
-    1: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
-    2: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
-    3: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", // test
-    4: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"  // test
+    0: "c002754ef9295108b7c1d85d20024e2cb6192541ae918964240519b887274cee", // test
+    1: "11db98c80e846881b2cc4281109796cfba73940ef699292c731acd552d3644ee", // test
+    2: "908f458c41c28bd1addc8399857173c10a2eee19e843e5154e1c03d51ce0fdcf", // test
+    3: "9539f72a5536902b17c3688a212313633c54951e4ddcc6a74f3bee5b043914e0", // test
+    4: "0d60b008d6c045886f1ed13f99fac9954d8f65620a2003be251e67f1302282ac"  // test
 };
 
 // Name setzen
