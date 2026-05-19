@@ -112,7 +112,8 @@ const ssbSurvivalTips = [
 window.onload = async function() {
     console.log("Starte System...");
     try {
-        const resp = await fetch('verbrechen.json');
+        const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/verbrechen.json?${sasToken}`;
+        const resp = await fetch(azureUrl);
         if (!resp.ok) throw new Error("verbrechen.json konnte nicht geladen werden");
         verbrechen_liste = await resp.json();
         
