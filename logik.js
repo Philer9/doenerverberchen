@@ -365,5 +365,77 @@ function updateScamAd() {
     }
 }
 
+async function addDönerVerbrechen(event) {
+    event.preventDefault(); // Verhindert das Neuladen der Seite
+
+    // 1. Admin-Schutz aktivieren
+    let isDönerAdmin = sessionStorage.getItem('isDönerAdmin') === 'true';
+    
+    if (!isDönerAdmin) {
+        const passwort = prompt("Admin-Passwort erforderlich, um ein Verbrechen zu loggen:");
+        const hash = await getHash(passwort?.toLowerCase().trim() || "");
+        
+        // Nutzt den Hash aus deinem Code (z.B. Person 1)
+        if (hash === "3cd6e0b2224da4639d88b7e67f6b2ba48009f7a0e2ae52eb895688d6140bb953") {
+            sessionStorage.setItem('isDönerAdmin', 'true');
+        } else {
+            alert("ZUGRIFF VERWEIGERT! Der Spieß dreht sich weiter...");
+            return;
+        }
+    }
+
+    // 2. Formular-Daten auslesen
+    const name = document.getElementById('crime-name').value.trim();
+    const lvl = parseInt(document.getElementById('crime-lvl').value);
+    const text = document.getElementById('crime-text').value.trim();
+
+    // Dein Azure-Link zu den Verbrechen (Nutzt deinen SAS-Token analog zur profillogik.js)
+    // Ersetze 'verbrechen.json' mit dem exakten Pfad in deinem Blob, falls nötig.
+    const azureUrl = `https://stdoenerverbrechen.blob.core.windows.net/beweise/verbrechen.json?${sasToken}`;
+
+    try {
+        // 3. Bestehende Verbrechen aus der Cloud laden
+        const response = await fetch(azureUrl);
+        let verbrechenListe = [];
+        
+        if (response.ok) {
+            verbrechenListe = await response.json();
+        } else {
+            console.warn("Konnte bestehende Liste nicht laden, erstelle neue Datei.");
+        }
+
+        // 4. Neues Gericht im passenden Format hinzufügen: ["Name", Level, "Zutaten | Beschreibung"]
+        const neuesGericht = [name, lvl, text];
+        verbrechenListe.push(neuesGericht);
+
+        // 5. Aktualisierte Liste zurück zu Azure schicken
+        const uploadRes = await fetch(azureUrl, {
+            method: 'PUT',
+            headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(verbrechenListe)
+        });
+
+        if (uploadRes.ok) {
+            alert(`🚨 "${name}" wurde erfolgreich in der Akte registriert!`);
+            document.getElementById('crime-form').reset(); // Formular leeren
+            
+            // Falls auf der Seite die Liste direkt angezeigt wird, hier die Render-Funktion neu aufrufen:
+            if (typeof ladeVerbrechen === "function") {
+                ladeVerbrechen(); 
+            } else {
+                window.location.reload(); // Fallback: Seite neu laden, um Änderungen zu sehen
+            }
+        } else {
+            alert("Fehler beim Hochladen: " + uploadRes.statusText);
+        }
+
+    } catch (err) {
+        console.error("Fehler beim Hinzufügen des Verbrechens:", err);
+        alert("Verbindung zur Döner-Datenbank fehlgeschlagen.");
+    }
+}
 // Beim Laden der Seite einmal ausführen
 document.addEventListener('DOMContentLoaded', updateScamAd);

@@ -131,6 +131,28 @@ WASSER IST NUR ZUM WASCHEN DA, DÖNER IST ZUM ESSEN DA +++
             </td>
         </tr>
     </table>
+    <div class="profile-card" style="margin-top: 30px; text-align: left;">
+    <h2 style="font-family: 'Comic Sans MS'; color: #800000; border-bottom: 2px solid #800000;">
+        🥙 Neues Döner-Verbrechen registrieren
+    </h2>
+    <form id="crime-form" onsubmit="addDönerVerbrechen(event)">
+        <p>
+            <label><b>Name des Verbrechens:</b></label><br>
+            <input type="text" id="crime-name" required style="width: 100%; padding: 5px; border: 1px solid #ccc;">
+        </p>
+        <p>
+            <label><b>Ekel-Level (1 bis 10):</b></label><br>
+            <input type="number" id="crime-lvl" min="1" max="10" value="5" required style="width: 60px; padding: 5px; border: 1px solid #ccc;">
+        </p>
+        <p>
+            <label><b>Zutaten & Zubereitung (Format: Zutaten | Beschreibung):</b></label><br>
+            <textarea id="crime-text" placeholder="Beispiel: Fladenbrot, Nutella, Zwiebeln | Das Brot mit Nutella bestreichen und rohe Zwiebeln darauf verteilen." required style="width: 100%; height: 80px; padding: 5px; border: 1px solid #ccc; font-family: inherit;"></textarea>
+        </p>
+        <button type="submit" class="btn-save" style="background: #800000; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%;">
+            🚨 Verbrechen in Cloud loggen
+        </button>
+    </form>
+</div>
 
     <marquee direction="right" scrollamount="20">🏃</marquee>
 </center>
