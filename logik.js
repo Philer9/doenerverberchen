@@ -226,7 +226,7 @@ async function updateScore(id) {
         const hash = await getHash(passwort?.toLowerCase().trim() || "");
         
         // Hier eines deiner Passwörter prüfen (z.B. das von Person 1)
-        if (hash === "e54baa88b023e4a1dcdf04e089eeb0e552f0d8550c2fdd1df5f02dbf094c6030") {
+        if (hash === "3cd6e0b2224da4639d88b7e67f6b2ba48009f7a0e2ae52eb895688d6140bb953") {
             sessionStorage.setItem('isDönerAdmin', 'true');
             isAdmin = true;
         } else {
